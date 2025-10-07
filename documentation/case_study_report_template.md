@@ -4,17 +4,18 @@
 
 **Business Problem**: Cyclistic needs to understand how annual members and casual riders use bikes differently to design effective marketing strategies for converting casual riders to annual members.
 
-**Analysis Approach**: Comprehensive analysis of 5+ million bike-share trips over 12 months using SQL, R, and Tableau to identify behavioral patterns and conversion opportunities.
+**Analysis Approach**: Comprehensive analysis of 5,397,554 bike-share trips over 12 months using Python to clean and analyze usage patterns, with visuals saved as SVG for reproducibility.
 
-**Key Findings**: [To be filled after analysis]
-- Casual riders use bikes primarily for leisure on weekends
-- Members use bikes primarily for weekday commuting
-- Significant differences in ride duration and usage patterns
+**Key Findings**:
+- Members account for 64.5% of rides; casual riders 35.5%
+- Casual riders take longer rides (avg 20.2 min, median 12.0) vs members (avg 12.1 min, median 8.7)
+- Weekend usage: casual 37.3%, member 23.6%; peak hour for both rider types is 17:00
+- Electric bikes dominate usage (61.6%, 3,326,048 rides) vs classic bikes (38.4%, 2,071,506 rides)
 
-**Recommendations**: [To be filled after analysis]
-- Target weekend leisure riders with membership benefits
-- Emphasize cost savings for frequent riders
-- Create member-exclusive perks and experiences
+**Recommendations**:
+- Target weekend leisure riders with membership benefits and promotions
+- Emphasize cost savings for frequent riders and commuters
+- Offer member-exclusive perks (priority reservations, partner discounts)
 
 ---
 
@@ -44,8 +45,8 @@ Cyclistic's finance analysts have concluded that annual members are much more pr
 ### 2.1 Data Sources
 - **Primary Dataset**: Divvy's historical trip data (publicly available)
 - **Data Portal**: https://www.divvybikes.com/system-data
-- **Time Period**: [12 months of data]
-- **Data Size**: [5+ million trip records]
+- **Time Period**: October 2024 – September 2025
+- **Data Size**: 5,397,554 trip records
 - **License**: Divvy Data License Agreement
 
 ### 2.2 Data Dictionary
@@ -61,9 +62,9 @@ Cyclistic's finance analysts have concluded that annual members are much more pr
 
 ### 2.3 Methodology
 1. **Data Collection**: Download monthly CSV files from Divvy data portal
-2. **Data Cleaning**: SQL-based cleaning and validation
-3. **Exploratory Analysis**: R-based statistical analysis
-4. **Visualization**: Tableau dashboards and R charts
+2. **Data Cleaning**: Python (pandas) filtering and validation; remove outliers; handle missing stations as 'Unknown'
+3. **Exploratory Analysis**: Python (pandas, numpy) summarization; compute rider-type comparisons and time patterns
+4. **Visualization**: Matplotlib/Seaborn charts saved as SVG for reproducibility
 5. **Business Recommendations**: Actionable insights for marketing team
 
 ---
@@ -71,10 +72,11 @@ Cyclistic's finance analysts have concluded that annual members are much more pr
 ## 3. Data Processing and Cleaning
 
 ### 3.1 Data Quality Assessment
-- **Total Records**: [Number] trip records
-- **Data Completeness**: [Percentage] complete records
-- **Missing Values**: [Description of missing data handling]
-- **Outliers**: [Description of outlier treatment]
+- **Total Records**: 5,397,554 trip records
+- **Data Completeness**: High completeness after cleaning; key fields present for analysis
+- **Missing Values**: Station names with missing values set to 'Unknown'; critical fields validated
+- **Outliers**: Removed rides < 1 minute and > 24 hours
+- **Tables**: analysis/exploratory/missing_summary.csv
 
 ### 3.2 Cleaning Decisions Made
 1. **Duration Filtering**: Removed rides < 1 minute and > 24 hours
@@ -95,45 +97,50 @@ Cyclistic's finance analysts have concluded that annual members are much more pr
 ## 4. Analysis and Findings
 
 ### 4.1 Ride Duration Analysis
-**[To be filled with actual analysis results]**
+Members vs Casual ride duration patterns were analyzed using cleaned data and summary statistics.
 
 **Key Findings**:
-- Casual riders average [X] minutes per ride
-- Members average [Y] minutes per ride
-- [Statistical significance and business implications]
+- Casual riders average 20.2 minutes per ride (median 12.0)
+- Members average 12.1 minutes per ride (median 8.7)
+- Casual riders exhibit longer, leisure-oriented rides; members show shorter, commute-oriented rides
 
-**Visualization**: Duration distribution charts and box plots
+**Visualization**: Duration distribution and box plots
+- Figures: analysis/exploratory/figures/ride_duration.svg, analysis/exploratory/figures/comparative_analysis.svg
+- Tables: analysis/exploratory/duration_stats.csv
 
 ### 4.2 Time-Based Usage Patterns
-**[To be filled with actual analysis results]**
-
 **Daily Patterns**:
-- Casual riders: [Weekend vs weekday usage]
-- Members: [Weekend vs weekday usage]
+- Weekend usage: Casual 37.3% vs Member 23.6%
+- Weekday usage is higher for members, indicating commute behavior
 
 **Hourly Patterns**:
-- Peak usage times for each rider type
-- Commuting vs leisure patterns
+- Peak usage at 17:00 for both rider types
 
 **Seasonal Patterns**:
-- Monthly usage variations
-- Weather impact on ridership
+- Monthly usage variations observed; higher ridership during warmer months (contextual)
+
+**Visualization**: Time-of-day and day-type charts
+- Figures: analysis/exploratory/figures/time_patterns.svg, analysis/exploratory/figures/comparative_analysis.svg
+- Tables: analysis/exploratory/hourly_usage.csv, analysis/exploratory/daily_usage.csv, analysis/exploratory/weekend_usage.csv, analysis/exploratory/monthly_usage.csv, analysis/exploratory/time_patterns.csv
 
 ### 4.3 Geographic Analysis
-**[To be filled with actual analysis results]**
-
 **Popular Stations**:
-- Top start and end stations
-- Station usage patterns by rider type
-- Geographic clustering of casual vs member usage
+- Top start and end stations identified with significant usage; downtown and commuter corridors dominate
+- Distinct clustering patterns by rider type observed
+
+**Visualization**: Top stations bar charts
+- Figures: analysis/exploratory/figures/stations.svg
+- Tables: analysis/exploratory/top_start_stations.csv, analysis/exploratory/top_end_stations.csv, analysis/exploratory/top_stations_member.csv
 
 ### 4.4 Bike Type Preferences
-**[To be filled with actual analysis results]**
-
 **Usage by Bike Type**:
-- Electric vs classic vs docked preferences
-- Member vs casual rider preferences
-- Cost implications of bike type usage
+- Electric Bike: 3,326,048 rides (61.6%)
+- Classic Bike: 2,071,506 rides (38.4%)
+- Members and casual riders both favor electric bikes; implications for fleet and pricing
+
+**Visualization**: Member distribution and comparative charts
+- Figures: analysis/exploratory/figures/member_types.svg, analysis/exploratory/figures/comparative_analysis.svg
+- Tables: analysis/exploratory/bike_preferences.csv, analysis/exploratory/bike_percentages.csv, analysis/exploratory/comparison_metrics.csv
 
 ---
 
@@ -153,17 +160,19 @@ Cyclistic's finance analysts have concluded that annual members are much more pr
    - Members: Peak usage during weekday commute hours
 
 ### 5.2 Conversion Opportunities
-1. **Cost-Benefit Analysis**: [To be calculated]
-   - Break-even point for casual riders
-   - Potential savings from annual membership
+1. **Cost-Benefit Analysis**:
+   - Membership pricing is $99/year for new and returning riders (limited-time), with standard pricing listed as $143.90/year; members have free unlocks, unlimited 45‑min classic bike rides, and member ebike pricing at $0.19/min with minutes 31–45 capped at $5.70 <mcreference link="https://divvybikes.com/pricing" index="2">2</mcreference> <mcreference link="https://divvybikes.com/pricing/annual" index="4">4</mcreference>
+   - Single rides cost $1 unlock + $0.19/min on classic bikes; ebikes for non‑members cost $1 unlock + $0.44/min <mcreference link="https://divvybikes.com/pricing/single-ride" index="5">5</mcreference> <mcreference link="https://divvybikes.com/pricing" index="2">2</mcreference>
+   - Using observed average ride duration (20.2 min), the classic single‑ride cost is approximately $4.84 per ride; with membership at $99/year (~$8.25/month), the break‑even is about 1.7 classic rides per month; for ebike, non‑member cost is ~ $9.89 per ride versus member ebike ~$3.84 per ride, implying break‑even at ~1.36 ebike rides per month <mcreference link="https://divvybikes.com/pricing" index="2">2</mcreference> <mcreference link="https://divvybikes.com/pricing/single-ride" index="5">5</mcreference>
+   - City announcement notes reduced membership pricing to $99 for new and lapsed members and minor price adjustments including member ebike rate $0.19/min <mcreference link="https://www.chicago.gov/city/en/depts/cdot/provdrs/bike/news/2025/july/-city-of-chicago-and-lyft-launch-major-divvy-membership-improvem.html" index="1">1</mcreference>
 
-2. **Usage Thresholds**: [To be identified]
-   - Minimum rides per month for membership value
-   - Target usage patterns for conversion
+2. **Usage Thresholds**:
+   - Classic bikes: At average ride length, membership becomes cost‑effective at ~2 rides/month; 4–8 rides/month yields substantial savings
+   - Ebikes: At average ride length, membership becomes cost‑effective at ~2 rides/month; 3–4+ rides/month yields substantial savings
 
-3. **Behavioral Triggers**: [To be identified]
-   - Common usage patterns before conversion
-   - Seasonal conversion opportunities
+3. **Behavioral Triggers**:
+   - Casual riders with increasing weekend frequency (2+ rides/month) and evening peaks are strong candidates for conversion
+   - Seasonal spikes (late spring to summer) present timely promotion windows for conversion
 
 ---
 
@@ -294,7 +303,10 @@ By leveraging these insights, Cyclistic can develop more effective marketing str
 ## 10. Appendices
 
 ### Appendix A: Technical Documentation
-- Data cleaning scripts (SQL)
+- Data cleaning and analysis scripts (Python)
+- EDA script: analysis/exploratory/cyclistic_eda.py
+- Visualization files (SVG) in analysis/exploratory/figures
+- Mirrored assets for publishing in portfolio/assets (figures and tables)
 - Analysis code (R)
 - Visualization files (Tableau)
 
@@ -302,6 +314,20 @@ By leveraging these insights, Cyclistic can develop more effective marketing str
 - Detailed statistical analysis
 - Geographic maps and station analysis
 - Seasonal trend analysis
+- Tables Index:
+  - analysis/exploratory/missing_summary.csv
+  - analysis/exploratory/duration_stats.csv
+  - analysis/exploratory/hourly_usage.csv
+  - analysis/exploratory/daily_usage.csv
+  - analysis/exploratory/weekend_usage.csv
+  - analysis/exploratory/monthly_usage.csv
+  - analysis/exploratory/time_patterns.csv
+  - analysis/exploratory/top_start_stations.csv
+  - analysis/exploratory/top_end_stations.csv
+  - analysis/exploratory/top_stations_member.csv
+  - analysis/exploratory/bike_preferences.csv
+  - analysis/exploratory/bike_percentages.csv
+  - analysis/exploratory/comparison_metrics.csv
 
 ### Appendix C: Data Dictionary
 - Complete field descriptions

@@ -98,12 +98,12 @@ def insert_variables_cell(nb_cells: List[dict], after_index: int) -> None:
 
 
 def patch_member_distribution_plot(nb_cells: List[dict]) -> None:
-    """Modify the Member Distribution plotting cell to use member_distribution with Kaggle metrics fallback."""
+    """Modify the Member Distribution plotting cell to use member_distribution with Kaggle metrics fallback and normalize columns."""
     md_idx = None
     for i, cell in enumerate(nb_cells):
         if cell.get('cell_type') == 'markdown':
             src = ''.join(cell.get('source', []))
-            if 'Member vs Casual Distribution' in src:
+            if 'Member vs Casual Distribution' in src or 'Member Distribution' in src:
                 md_idx = i
                 break
     if md_idx is None:
@@ -123,6 +123,11 @@ def patch_member_distribution_plot(nb_cells: List[dict]) -> None:
         "    md_df = member_distribution.copy()\n",
         "except NameError:\n",
         "    md_df = cyclistic_data['member_casual'].value_counts().rename_axis('member_type').reset_index(name='count')\n",
+        "# Normalize column names from dataset CSV if needed\n",
+        "if 'member_type' not in md_df.columns and 'member_casual' in md_df.columns:\n",
+        "    md_df = md_df.rename(columns={'member_casual': 'member_type'})\n",
+        "# Ensure percentage exists\n",
+        "if 'percentage' not in md_df.columns and 'count' in md_df.columns:\n",
         "    md_df['percentage'] = md_df['count'] / md_df['count'].sum() * 100\n",
         "print(md_df[['member_type','count','percentage']])\n",
         "plt.figure(figsize=(8,5))\n",
@@ -133,8 +138,41 @@ def patch_member_distribution_plot(nb_cells: List[dict]) -> None:
         "for index, row in md_df.iterrows():\n",
         "    plt.text(index, row['count'] + max(md_df['count'])*0.01, f\"{row['percentage']:.1f}%\", ha='center')\n",
         "plt.show()\n",
+        "# PLOT_PATCH_MARKER: member_distribution_normalized\n",
     ]
     nb_cells[plot_idx]['source'] = new_source
+
+
+def patch_key_statistics_summary(nb_cells: List[dict]) -> None:
+    """Replace the Key Statistics Summary block with a correct list-comprehension-based implementation to avoid SyntaxError."""
+    for i, cell in enumerate(nb_cells):
+        if cell.get('cell_type') != 'code':
+            continue
+        src = ''.join(cell.get('source', []))
+        if ('Key Statistics Summary' in src) or ('ax4.set_title' in src and 'Key Statistics' in src):
+            new_source = [
+                "# Corrected Key Statistics Summary block\n",
+                "stats_blocks = []\n",
+                "for member_type, stats in duration_stats.iterrows():\n",
+                "    stats_lines = [\n",
+                "        f\"{member_type.upper()}: RIDERS:\",\n",
+                "        f\"- Average Duration: {stats['mean']:.1f} minutes\",\n",
+                "        f\"- Median Duration: {stats['median']:.1f} minutes\",\n",
+                "        f\"- Total Rides: {int(stats['count']):,}\",\n",
+                "        f\"- Standard Deviation: {stats['std']:.1f} minutes\",\n",
+                "    ]\n",
+                "    stats_blocks.append(\"\\n\".join(stats_lines))\n",
+                "stats_text = \"\\n\\n\".join(stats_blocks)\n",
+                "\n",
+                "ax4.text(0.1, 0.9, stats_text, transform=ax4.transAxes, fontsize=12,\n",
+                "        verticalalignment='top', fontfamily='monospace',\n",
+                "        bbox=dict(boxstyle='round', facecolor='lightgray', alpha=0.8))\n",
+                "ax4.set_title('Key Statistics Summary', fontsize=14, fontweight='bold')\n",
+                "plt.tight_layout()\n",
+                "plt.show()\n",
+            ]
+            cell['source'] = [line if line.endswith('\n') else line + '\n' for line in new_source]
+            break
 
 
 def main():
@@ -174,6 +212,7 @@ def main():
 
     # Patch member distribution plotting cell to use metrics
     patch_member_distribution_plot(cells)
+    patch_key_statistics_summary(cells)
 
     # Write back with ASCII-safe encoding
     with open(NB_PATH, 'w', encoding='utf-8') as f:

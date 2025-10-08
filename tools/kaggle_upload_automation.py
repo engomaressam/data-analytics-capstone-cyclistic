@@ -219,11 +219,17 @@ def main():
     uploader.push_kernel(
         kernel_dir="portfolio/kaggle_kernel_python"
     )
-    
+
+    # Push R kernel (automated via CLI)
+    print("\n📓 Pushing R Kernel...")
+    uploader.push_kernel(
+        kernel_dir="portfolio/kaggle_kernel_r"
+    )
+
     # List current datasets and notebooks
     print("\n📊 Current Datasets:")
     uploader.list_datasets()
-    
+
     print("\n📓 Current Notebooks:")
     uploader.list_notebooks()
     

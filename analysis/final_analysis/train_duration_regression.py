@@ -20,6 +20,12 @@ from sklearn.impute import SimpleImputer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.inspection import permutation_importance
+try:
+    from sklearn.inspection import PartialDependenceDisplay
+except Exception:
+    PartialDependenceDisplay = None
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -77,13 +83,129 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         if df["is_weekend"].dtype == bool:
             df["is_weekend"] = df["is_weekend"].astype(int)
 
+    # Derive time_of_day and day_type if possible
+    try:
+        if "time_of_day" not in df.columns and "hour_of_day" in df.columns:
+            bins = [0, 6, 12, 18, 24]
+            labels = ["Night", "Morning", "Afternoon", "Evening"]
+            # Use right=False so that 0-5 Night, 6-11 Morning, etc.
+            df["time_of_day"] = pd.cut(df["hour_of_day"], bins=bins, labels=labels, right=False, include_lowest=True).astype(str)
+        if "day_type" not in df.columns and "is_weekend" in df.columns:
+            df["day_type"] = np.where(df["is_weekend"].astype(int) == 1, "Weekend", "Weekday")
+    except Exception:
+        pass
+
     return df
+
+
+def add_station_features(df: pd.DataFrame, top_pairs: int = 50) -> pd.DataFrame:
+    """Add station popularity and station-pair frequency features.
+    Chooses station ID if available, else station name.
+    Creates numeric features: start_station_popularity, end_station_popularity, station_pair_freq
+    Creates low-card categorical: station_pair_top (top N pairs, others->"Other")
+    """
+    start_col = None
+    end_col = None
+    for cand in ["start_station_id", "start_station_name"]:
+        if cand in df.columns:
+            start_col = cand
+            break
+    for cand in ["end_station_id", "end_station_name"]:
+        if cand in df.columns:
+            end_col = cand
+            break
+    if start_col is None or end_col is None:
+        # If station info unavailable, just return
+        return df
+
+    # Popularity counts
+    try:
+        start_counts = df[start_col].value_counts()
+        end_counts = df[end_col].value_counts()
+        df["start_station_popularity"] = df[start_col].map(start_counts).astype(float)
+        df["end_station_popularity"] = df[end_col].map(end_counts).astype(float)
+    except Exception:
+        df["start_station_popularity"] = np.nan
+        df["end_station_popularity"] = np.nan
+
+    # Station pair frequency (string key)
+    try:
+        pair_key = df[start_col].astype(str) + "|" + df[end_col].astype(str)
+        pair_counts = pair_key.value_counts()
+        df["station_pair_freq"] = pair_key.map(pair_counts).astype(float)
+        # Top N pairs
+        top_keys = set(pair_counts.head(max(1, int(top_pairs))).index.tolist())
+        df["station_pair_top"] = np.where(pair_key.isin(top_keys), pair_key, "Other")
+    except Exception:
+        df["station_pair_freq"] = np.nan
+        df["station_pair_top"] = "Other"
+
+    return df
+
+
+def merge_weather(df: pd.DataFrame, weather_csv: str, dt_col: str = "datetime", prefix: str = "wx_") -> pd.DataFrame:
+    """Merge hourly weather features into the ride dataframe.
+    Expects weather CSV with a datetime-like column (dt_col). Parses to local date+hour and merges on those.
+    Numeric columns from weather are prefixed with `prefix`.
+    """
+    try:
+        wx = pd.read_csv(weather_csv)
+    except Exception as e:
+        print(f"Warning: could not read weather CSV: {e}")
+        return df
+
+    # Find a datetime column
+    possible_dt_cols = [dt_col, "date_time", "timestamp", "time", "valid_time", "Datetime", "datetime_utc"]
+    dt_found = None
+    for c in possible_dt_cols:
+        if c in wx.columns:
+            dt_found = c
+            break
+    if dt_found is None:
+        print("Warning: no datetime-like column found in weather CSV; skipping merge")
+        return df
+
+    try:
+        wx_dt = pd.to_datetime(wx[dt_found], errors="coerce")
+        wx["date"] = wx_dt.dt.date.astype(str)
+        wx["hour"] = wx_dt.dt.hour
+    except Exception as e:
+        print(f"Warning: could not parse weather datetime: {e}")
+        return df
+
+    # Derive date/hour on rides
+    if "started_at" in df.columns:
+        dt = pd.to_datetime(df["started_at"], errors="coerce")
+        df["date"] = dt.dt.date.astype(str)
+        df["hour"] = dt.dt.hour
+    elif {"date", "hour"}.issubset(df.columns):
+        # already present
+        pass
+    else:
+        print("Warning: cannot derive date/hour from rides; skipping weather merge")
+        return df
+
+    # Select numeric weather columns
+    wx_num_cols = [c for c in wx.columns if c not in [dt_found, "date", "hour"] and pd.api.types.is_numeric_dtype(wx[c])]
+    if not wx_num_cols:
+        print("Warning: no numeric weather columns found; skipping weather merge")
+        return df
+
+    wx_renamed = wx[["date", "hour"] + wx_num_cols].copy()
+    wx_renamed.columns = ["date", "hour"] + [prefix + c for c in wx_num_cols]
+
+    merged = df.merge(wx_renamed, on=["date", "hour"], how="left")
+    return merged
 
 
 def train_model(df: pd.DataFrame, outdir: str, test_size: float = 0.2, random_state: int = 42,
                 n_estimators: int = 100, max_depth: int | None = 25, n_jobs: int = 1,
                 max_samples: float | int | None = 100_000, min_samples_leaf: int = 3,
-                max_train_rows: int | None = 300_000):
+                max_train_rows: int | None = 300_000,
+                top_station_pairs: int = 50,
+                weather_csv: str | None = None,
+                weather_dt_col: str = "datetime",
+                compare_models: bool = False):
     ensure_dir(outdir)
     figdir = os.path.join(outdir, "figures")
     ensure_dir(figdir)
@@ -97,6 +219,9 @@ def train_model(df: pd.DataFrame, outdir: str, test_size: float = 0.2, random_st
 
     # Build/augment features
     df = build_features(df)
+    df = add_station_features(df, top_pairs=top_station_pairs)
+    if weather_csv:
+        df = merge_weather(df, weather_csv=weather_csv, dt_col=weather_dt_col)
 
     target = df["ride_duration_minutes"].astype(float)
 
@@ -111,13 +236,22 @@ def train_model(df: pd.DataFrame, outdir: str, test_size: float = 0.2, random_st
         "end_lat",
         "end_lng",
         "distance_km",
+        # station-level numeric features
+        "start_station_popularity",
+        "end_station_popularity",
+        "station_pair_freq",
     ]
+
+    # Include weather numeric features if present
+    wx_numeric = [c for c in df.columns if c.startswith("wx_") and pd.api.types.is_numeric_dtype(df[c])]
+    numeric_features += wx_numeric
 
     categorical_features: List[str] = [
         "member_casual",
         "rideable_type",
         "time_of_day",  # e.g., Morning/Afternoon/Evening/Night
         "day_type",     # Weekday/Weekend
+        "station_pair_top",  # limited top pairs
     ]
 
     # Keep only columns that exist in df
@@ -249,9 +383,89 @@ def train_model(df: pd.DataFrame, outdir: str, test_size: float = 0.2, random_st
         print(f"Warning: could not compute feature importances: {e}")
 
     # Save sample predictions
-    preds_df = pd.DataFrame({"actual": y_test, "pred": y_pred})
-    preds_df.to_csv(os.path.join(outdir, "predictions_sample.csv"), index=False)
+    err_df = pd.DataFrame({"actual": y_test, "pred": y_pred})
+    err_df.to_csv(os.path.join(outdir, "predictions_sample.csv"), index=False)
 
+    # Error anatomy by segments
+    try:
+        seg_cols = [c for c in ["member_casual", "time_of_day", "station_pair_top", "day_type"] if c in X_test.columns]
+        err_df = pd.DataFrame({"actual": y_test, "pred": y_pred})
+        err_df = pd.concat([err_df.reset_index(drop=True), X_test[seg_cols].reset_index(drop=True)], axis=1)
+        err_df["error"] = err_df["actual"] - err_df["pred"]
+        rows = []
+        for seg in seg_cols:
+            grp = err_df.groupby(seg)
+            mae_seg = grp.apply(lambda g: float(mean_absolute_error(g["actual"], g["pred"])) )
+            rmse_seg = grp.apply(lambda g: float(np.sqrt(mean_squared_error(g["actual"], g["pred"])) ))
+            for k in mae_seg.index:
+                rows.append({"segment": seg, "value": str(k), "mae": round(mae_seg[k], 3), "rmse": round(rmse_seg[k], 3), "count": int(len(grp.get_group(k)))})
+        ea_df = pd.DataFrame(rows)
+        ea_path = os.path.join(outdir, "error_anatomy.csv")
+        ea_df.to_csv(ea_path, index=False)
+    except Exception as e:
+        print(f"Warning: could not compute error anatomy: {e}")
+
+    # Partial dependence plots (for a few numeric features)
+    try:
+        if PartialDependenceDisplay is not None:
+            import matplotlib.pyplot as plt
+            pdp_features = [f for f in ["hour_of_day", "distance_km", "start_station_popularity"] if f in numeric_features]
+            pdp_features = pdp_features[:3]
+            if pdp_features:
+                fig, ax = plt.subplots(nrows=len(pdp_features), ncols=1, figsize=(6, 3*len(pdp_features)))
+                PartialDependenceDisplay.from_estimator(pipeline, X_test, pdp_features, ax=ax)
+                plt.tight_layout()
+                pdp_svg = os.path.join(figdir, "partial_dependence_rf.svg")
+                plt.savefig(pdp_svg, format="svg")
+                plt.close()
+    except Exception as e:
+        print(f"Warning: could not generate partial dependence plots: {e}")
+
+    # Model comparison: RF vs HistGradientBoosting
+    if compare_models:
+        try:
+            hgb = HistGradientBoostingRegressor(max_depth=7, learning_rate=0.06, max_iter=200, random_state=random_state)
+            hgb_pipe = Pipeline(steps=[("preprocessor", preprocessor), ("model", hgb)])
+            hgb_pipe.fit(X_train, y_train)
+            hgb_pred = hgb_pipe.predict(X_test)
+            mae_h = mean_absolute_error(y_test, hgb_pred)
+            rmse_h = float(np.sqrt(mean_squared_error(y_test, hgb_pred)))
+            r2_h = r2_score(y_test, hgb_pred)
+            metrics_h = {
+                "samples": int(len(df)),
+                "train_size": int(len(X_train)),
+                "test_size": int(len(X_test)),
+                "mae": round(float(mae_h), 3),
+                "rmse": round(float(rmse_h), 3),
+                "r2": round(float(r2_h), 4),
+                "features": feature_cols,
+            }
+            with open(os.path.join(outdir, "metrics_hgb.json"), "w", encoding="utf-8") as f:
+                json.dump(metrics_h, f, indent=2)
+            # Permutation importance for HGB
+            try:
+                perm = permutation_importance(hgb_pipe, X_test, y_test, n_repeats=5, random_state=random_state, n_jobs=n_jobs)
+                ohe = hgb_pipe.named_steps["preprocessor"].named_transformers_["cat"].named_steps.get("onehot")
+                cat_names = list(ohe.get_feature_names_out(categorical_features)) if ohe and categorical_features else []
+                hgb_feature_names = numeric_features + cat_names
+                pi_df = pd.DataFrame({"feature": hgb_feature_names, "importance_mean": perm.importances_mean, "importance_std": perm.importances_std})
+                pi_df = pi_df.sort_values(by="importance_mean", ascending=False)
+                pi_path = os.path.join(outdir, "feature_importances_hgb_permutation.csv")
+                pi_df.to_csv(pi_path, index=False)
+                import matplotlib.pyplot as plt
+                top_n = min(30, len(pi_df))
+                plt.figure(figsize=(8, max(4, top_n * 0.25)))
+                plt.barh(pi_df["feature"].head(top_n)[::-1], pi_df["importance_mean"].head(top_n)[::-1])
+                plt.xlabel("Permutation Importance (mean)")
+                plt.title("Top Features (HistGradientBoosting)")
+                plt.tight_layout()
+                pi_svg = os.path.join(figdir, "feature_importances_hgb_permutation.svg")
+                plt.savefig(pi_svg, format="svg")
+                plt.close()
+            except Exception as e:
+                print(f"Warning: could not compute permutation importances for HGB: {e}")
+        except Exception as e:
+            print(f"Warning: model comparison failed: {e}")
     print("Training complete. Metrics:")
     print(json.dumps(metrics, indent=2))
     print(f"Model saved to: {model_path}")
@@ -273,6 +487,10 @@ if __name__ == "__main__":
     parser.add_argument("--min_samples_leaf", type=int, default=3)
     parser.add_argument("--max_train_rows", type=int, default=300000,
                         help="Optional cap on training rows to reduce memory usage")
+    parser.add_argument("--top_station_pairs", type=int, default=50, help="Number of top station pairs to keep as categorical")
+    parser.add_argument("--weather_csv", type=str, default=None, help="Optional path to hourly weather CSV to merge")
+    parser.add_argument("--weather_dt_col", type=str, default="datetime", help="Datetime column name in weather CSV")
+    parser.add_argument("--compare_models", action="store_true", help="Run model comparison between RF and HistGradientBoosting")
     args = parser.parse_args()
 
     ensure_dir(args.outdir)
@@ -284,4 +502,8 @@ if __name__ == "__main__":
                 n_estimators=args.n_estimators, max_depth=args.max_depth,
                 n_jobs=args.n_jobs, max_samples=args.max_samples,
                 min_samples_leaf=args.min_samples_leaf,
-                max_train_rows=args.max_train_rows)
+                max_train_rows=args.max_train_rows,
+                top_station_pairs=args.top_station_pairs,
+                weather_csv=args.weather_csv,
+                weather_dt_col=args.weather_dt_col,
+                compare_models=args.compare_models)

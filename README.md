@@ -1,7 +1,13 @@
 # Data Analytics Capstone Project
 
+[![Lint](https://github.com/engomaressam/data-analytics-capstone-cyclistic/actions/workflows/python-lint.yml/badge.svg)](https://github.com/engomaressam/data-analytics-capstone-cyclistic/actions/workflows/python-lint.yml)
+
 ## Project Overview
 This capstone project demonstrates comprehensive data analytics skills gained through the Google Data Analytics Certificate program. The project follows the complete data analysis process from problem identification to actionable insights and recommendations.
+
+## Portfolio Links
+- Kaggle Dataset: https://www.kaggle.com/datasets/engomaressam/cyclistic-eda-derived-metrics
+- Kaggle Notebook (Python): https://www.kaggle.com/code/engomaressam/cyclistic-eda-portfolio-python
 
 ## Project Structure
 ```
@@ -19,24 +25,24 @@ This capstone project demonstrates comprehensive data analytics skills gained th
 ## Skills Demonstrated
 - **Data Collection & Import**: Identifying relevant datasets
 - **Data Cleaning**: Using spreadsheets and SQL for data preparation
-- **Data Analysis**: Advanced SQL queries and R programming
-- **Data Visualization**: Tableau dashboards and R visualizations
+- **Feature Engineering**: Time-based features, station popularity, and weather integration
+- **Modeling**: Random Forest regression pipeline and evaluation (MAE, RMSE, R²)
+- **Data Visualization**: Publication-ready figures and charts
 - **Communication**: Clear documentation and storytelling
 - **Problem Solving**: Business-focused analysis and recommendations
 
-## Deliverables
-1. **Complete Case Study**: End-to-end data analysis project
-2. **Portfolio Materials**: Professional presentation of work
-3. **Elevator Pitch**: Concise project summary
-4. **LinkedIn Integration**: Professional profile updates
+## Key Deliverables
+1. End-to-end EDA with derived metrics and insights
+2. Weather-enhanced duration prediction model with artifacts
+3. Kaggle dataset and notebook for public showcasing
+4. Automation scripts for publishing and verification
+5. CI lint workflow for code quality (flake8)
 
-## Next Steps
-1. Choose case study focus area
-2. Identify and collect appropriate dataset
-3. Execute data analysis process
-4. Create visualizations and dashboards
-5. Document findings and recommendations
-6. Prepare portfolio materials
+## Getting Started
+1. Set up Python environment (3.10+ recommended)
+2. Install dependencies: `python -m pip install -U pip && pip install pandas numpy scikit-learn seaborn matplotlib`
+3. Run analysis scripts from `analysis/final_analysis/` (see `train_duration_regression.py` for CLI options)
+4. Publish portfolio artifacts via the Kaggle automation tool in `tools/`
 
 ---
 *This project showcases the comprehensive skills gained through the Google Data Analytics Certificate program.*

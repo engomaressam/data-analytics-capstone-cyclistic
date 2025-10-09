@@ -1,0 +1,32 @@
+name: Python Lint (flake8)
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install flake8
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: Run flake8
+        run: |
+          # Fail on syntax errors; relax line-length to keep focus on substantive issues
+          flake8 . \
+            --max-line-length=120 \
+            --extend-exclude=".git,__pycache__,data,visualizations,portfolio/kaggle_dataset,portfolio/kaggle_dataset_min,analysis/exploratory,.ipynb_checkpoints" \
+            --count

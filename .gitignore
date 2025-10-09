@@ -6,6 +6,9 @@ data/raw/
 data/downloaded/
 data/processed/
 
+# Ignore external data dumps
+data/external/
+
 # Ignore Mac resource forks and system files
 **/__MACOSX/
 **/.DS_Store
@@ -20,3 +23,16 @@ __pycache__/
 
 # Ignore notebooks checkpoints
 .ipynb_checkpoints/
+
+# Ignore virtual environments
+venv/
+.env
+.env.*
+.venv/
+
+# Ignore local analysis outputs (retain curated portfolio artifacts)
+analysis/final_analysis/outputs/
+analysis/final_analysis/outputs_weather/
+
+# Node/npm caches (if any)
+node_modules/

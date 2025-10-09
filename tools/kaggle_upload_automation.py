@@ -18,26 +18,61 @@ class KaggleUploader:
         self.setup_kaggle_credentials()
     
     def setup_kaggle_credentials(self):
-        """Set up Kaggle API credentials"""
+        """Set up Kaggle API credentials securely.
+        Order of precedence:
+        1) Environment variables KAGGLE_USERNAME, KAGGLE_KEY
+        2) Credentials file at self.credentials_path (git-ignored)
+        Note: Do NOT commit credentials to the repository.
+        """
+        # Prefer environment variables if present
+        env_user = os.environ.get('KAGGLE_USERNAME')
+        env_key = os.environ.get('KAGGLE_KEY')
+        if env_user and env_key:
+            return
+        # Fall back to local credentials file
         try:
-            # Read credentials from JSON file
             with open(self.credentials_path, 'r') as f:
                 credentials = json.load(f)
-            
-            # Set environment variables for Kaggle API
-            os.environ['KAGGLE_USERNAME'] = credentials['username']
-            os.environ['KAGGLE_KEY'] = credentials['key']
-            
-            print(f"✅ Kaggle credentials loaded for user: {credentials['username']}")
-            
+            os.environ['KAGGLE_USERNAME'] = credentials.get('username', '')
+            os.environ['KAGGLE_KEY'] = credentials.get('key', '')
         except FileNotFoundError:
             print(f"❌ Error: Kaggle credentials file not found at {self.credentials_path}")
-            print("Please ensure your kaggle.json file is in the correct location")
+            print("Please ensure your kaggle.json file is in the correct location or set environment variables.")
             sys.exit(1)
         except json.JSONDecodeError:
             print(f"❌ Error: Invalid JSON in credentials file {self.credentials_path}")
             sys.exit(1)
-    
+
+    def ensure_kaggle_cli_path(self):
+        """Ensure Kaggle CLI is available on PATH for subprocess calls."""
+        if shutil.which("kaggle"):
+            return True
+        # Try common per-user Scripts path for Windows (Python 3.13)
+        user_scripts = os.path.join(os.environ.get("USERPROFILE", ""), "AppData", "Roaming", "Python", "Python313", "Scripts")
+        kaggle_exe = os.path.join(user_scripts, "kaggle.exe")
+        if os.path.exists(kaggle_exe):
+            os.environ["PATH"] = user_scripts + os.pathsep + os.environ.get("PATH", "")
+            return True
+        print("❌ Kaggle CLI not found. Please ensure 'kaggle' is installed and on PATH.")
+        print("   Try: pip install --user kaggle")
+        return False
+
+    def run_kaggle_command(self, cmd):
+        if not self.ensure_kaggle_cli_path():
+            return None
+        try:
+            print(f"➡️ Running: {cmd}")
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            if result.returncode != 0:
+                print("❌ Kaggle command failed:")
+                print(result.stderr)
+                return None
+            print(result.stdout)
+            return result.stdout
+        except Exception as e:
+            print("❌ Error executing Kaggle command:", e)
+            return None
+
     def run_kaggle_command(self, command):
         """Run a Kaggle API command and return the result"""
         try:

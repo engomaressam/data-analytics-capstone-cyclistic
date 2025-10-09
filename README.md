@@ -1,5 +1,7 @@
 # Data Analytics Capstone Project
 
+[![Lint](https://github.com/engomaressam/data-analytics-capstone-cyclistic/actions/workflows/python-lint.yml/badge.svg)](https://github.com/engomaressam/data-analytics-capstone-cyclistic/actions/workflows/python-lint.yml)
+
 ## Project Overview
 This capstone project demonstrates comprehensive data analytics skills gained through the Google Data Analytics Certificate program. The project follows the complete data analysis process from problem identification to actionable insights and recommendations.
 
@@ -38,8 +40,8 @@ This capstone project demonstrates comprehensive data analytics skills gained th
 
 ## Getting Started
 1. Set up Python environment (3.10+ recommended)
-2. Install dependencies as needed (e.g., scikit-learn, pandas, numpy)
-3. Run analysis scripts from `analysis/final_analysis/`
+2. Install dependencies: `python -m pip install -U pip && pip install pandas numpy scikit-learn seaborn matplotlib`
+3. Run analysis scripts from `analysis/final_analysis/` (see `train_duration_regression.py` for CLI options)
 4. Publish portfolio artifacts via the Kaggle automation tool in `tools/`
 
 ---

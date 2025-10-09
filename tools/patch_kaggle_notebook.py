@@ -15,6 +15,16 @@ DATASET_DETECTION_LINES: List[str] = [
     "member_dist_df = pd.read_csv(f\"{dataset_base}/member_distribution.csv\") if os.path.exists(f\"{dataset_base}/member_distribution.csv\") else None\n",
     "daily_usage_df = pd.read_csv(f\"{dataset_base}/daily_usage.csv\") if os.path.exists(f\"{dataset_base}/daily_usage.csv\") else None\n",
     "monthly_usage_df = pd.read_csv(f\"{dataset_base}/monthly_usage.csv\") if os.path.exists(f\"{dataset_base}/monthly_usage.csv\") else None\n",
+    "# ML artifacts (optional)\n",
+    "rf_metrics = None\n",
+    "try:\n",
+    "    if os.path.exists(f\"{dataset_base}/metrics.json\"):\n",
+    "        with open(f\"{dataset_base}/metrics.json\", 'r') as f:\n",
+    "            rf_metrics = json.load(f)\n",
+    "except Exception as e:\n",
+    "    print('Warning: could not load RF metrics:', e)\n",
+    "fi_csv_path = f\"{dataset_base}/feature_importances.csv\"\n",
+    "ea_csv_path = f\"{dataset_base}/error_anatomy.csv\"\n",
 ]
 
 # Lines to append at the end of the data loading cell to define commonly used tables
@@ -175,6 +185,57 @@ def patch_key_statistics_summary(nb_cells: List[dict]) -> None:
             break
 
 
+def insert_ml_metrics_cell(nb_cells: List[dict], after_index: int) -> None:
+    """Insert a code cell to summarize ML metrics and importances if present."""
+    new_cell = {
+        'cell_type': 'code',
+        'execution_count': None,
+        'metadata': {},
+        'outputs': [],
+        'source': [
+            "# ML Model Metrics Summary (optional)\n",
+            "print('📈 ML Model Metrics Summary (RandomForest):')\n",
+            "try:\n",
+            "    if rf_metrics is not None:\n",
+            "        print(json.dumps(rf_metrics, indent=2))\n",
+            "    else:\n",
+            "        print('No RF metrics.json found in dataset folder.')\n",
+            "except Exception as e:\n",
+            "    print('Error showing ML metrics:', e)\n",
+            "\n",
+            "# Show top feature importances if CSV available\n",
+            "try:\n",
+            "    if os.path.exists(fi_csv_path):\n",
+            "        fi_df = pd.read_csv(fi_csv_path)\n",
+            "        top_n = min(20, len(fi_df))\n",
+            "        print('Top Features (Importance):')\n",
+            "        print(fi_df.head(top_n))\n",
+            "        plt.figure(figsize=(8, max(4, top_n * 0.25)))\n",
+            "        plt.barh(fi_df['feature'].head(top_n)[::-1], fi_df['importance'].head(top_n)[::-1])\n",
+            "        plt.xlabel('Importance')\n",
+            "        plt.title('Top Feature Importances (RandomForest)')\n",
+            "        plt.tight_layout()\n",
+            "        plt.show()\n",
+            "    else:\n",
+            "        print('No feature_importances.csv found.')\n",
+            "except Exception as e:\n",
+            "    print('Error showing feature importances:', e)\n",
+            "\n",
+            "# Error anatomy preview if available\n",
+            "try:\n",
+            "    if os.path.exists(ea_csv_path):\n",
+            "        ea_df = pd.read_csv(ea_csv_path)\n",
+            "        print('Error Anatomy (head):')\n",
+            "        print(ea_df.head(10))\n",
+            "    else:\n",
+            "        print('No error_anatomy.csv found.')\n",
+            "except Exception as e:\n",
+            "    print('Error reading error anatomy:', e)\n",
+        ]
+    }
+    nb_cells.insert(after_index + 2, new_cell)
+
+
 def main():
     with open(NB_PATH, 'r', encoding='utf-8') as f:
         nb = json.load(f)
@@ -209,6 +270,10 @@ def main():
                 break
     if not has_member_distribution and load_idx is not None:
         insert_variables_cell(cells, load_idx)
+
+    # Insert ML metrics cell after data loading/variables
+    if load_idx is not None:
+        insert_ml_metrics_cell(cells, load_idx)
 
     # Patch member distribution plotting cell to use metrics
     patch_member_distribution_plot(cells)

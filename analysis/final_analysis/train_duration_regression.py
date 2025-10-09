@@ -490,14 +490,39 @@ if __name__ == "__main__":
     parser.add_argument("--top_station_pairs", type=int, default=50, help="Number of top station pairs to keep as categorical")
     parser.add_argument("--weather_csv", type=str, default=None, help="Optional path to hourly weather CSV to merge")
     parser.add_argument("--weather_dt_col", type=str, default="datetime", help="Datetime column name in weather CSV")
+    # Add optional date range filtering for lightweight runs
+    parser.add_argument("--date_start", type=str, default=None, help="Optional ISO date start (e.g., 2022-06-01) for subset filtering")
+    parser.add_argument("--date_end", type=str, default=None, help="Optional ISO date end (e.g., 2022-06-07) for subset filtering")
     parser.add_argument("--compare_models", action="store_true", help="Run model comparison between RF and HistGradientBoosting")
     args = parser.parse_args()
-
+    
     ensure_dir(args.outdir)
-
+    
     # Load data
     df = pd.read_csv(args.input)
-
+    
+    # Apply optional date range filtering on started_at if provided
+    if (args.date_start is not None) or (args.date_end is not None):
+        if "started_at" in df.columns:
+            try:
+                dt = pd.to_datetime(df["started_at"], errors="coerce")
+                if args.date_start is not None:
+                    try:
+                        start_dt = pd.to_datetime(args.date_start)
+                        df = df[dt >= start_dt]
+                    except Exception:
+                        print(f"Warning: could not parse --date_start '{args.date_start}', skipping start filter")
+                if args.date_end is not None:
+                    try:
+                        end_dt = pd.to_datetime(args.date_end)
+                        df = df[dt <= end_dt]
+                    except Exception:
+                        print(f"Warning: could not parse --date_end '{args.date_end}', skipping end filter")
+            except Exception as e:
+                print(f"Warning: failed to apply date filtering: {e}")
+        else:
+            print("Warning: 'started_at' column not found; cannot apply date range filter")
+    
     train_model(df, outdir=args.outdir, test_size=args.test_size,
                 n_estimators=args.n_estimators, max_depth=args.max_depth,
                 n_jobs=args.n_jobs, max_samples=args.max_samples,

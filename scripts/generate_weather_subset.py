@@ -1,10 +1,10 @@
 import os
-import sys
 from datetime import datetime
 import numpy as np
 import pandas as pd
 
 from datetime import timedelta
+
 
 def main():
     # Defaults: last 7 days of September 2025
@@ -39,6 +39,7 @@ def main():
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     wx.to_csv(out_path, index=False)
     print(f"Wrote {out_path} rows: {len(wx)}")
+
 
 if __name__ == "__main__":
     main()

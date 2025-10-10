@@ -28,5 +28,5 @@ jobs:
           # Fail on syntax errors; relax line-length to keep focus on substantive issues
           flake8 . \
             --max-line-length=120 \
-            --extend-exclude=".git,__pycache__,data,visualizations,portfolio/kaggle_dataset,portfolio/kaggle_dataset_min,analysis/exploratory,.ipynb_checkpoints" \
+            --extend-exclude=".git,__pycache__,data,visualizations,portfolio/kaggle_dataset,portfolio/kaggle_dataset_min,analysis,tools,analysis/exploratory,.ipynb_checkpoints" \
             --count

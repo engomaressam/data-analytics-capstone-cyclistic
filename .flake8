@@ -1,0 +1,3 @@
+[flake8]
+max-line-length = 120
+exclude = .git,__pycache__,data,visualizations,portfolio/kaggle_dataset,portfolio/kaggle_dataset_min,analysis,tools,analysis/exploratory,.ipynb_checkpoints

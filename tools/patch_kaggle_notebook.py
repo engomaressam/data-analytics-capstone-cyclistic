@@ -128,7 +128,7 @@ def patch_member_distribution_plot(nb_cells: List[dict]) -> None:
         return
     new_source = [
         "# Member Distribution plot using provided dataset metrics when available\n",
-        "print('👥 Member Distribution:')\n",
+        "print('Member Distribution:')\n",
         "try:\n",
         "    md_df = member_distribution.copy()\n",
         "except NameError:\n",
@@ -194,7 +194,7 @@ def insert_ml_metrics_cell(nb_cells: List[dict], after_index: int) -> None:
         'outputs': [],
         'source': [
             "# ML Model Metrics Summary (optional)\n",
-            "print('📈 ML Model Metrics Summary (RandomForest):')\n",
+            "print('ML Model Metrics Summary (RandomForest):')\n",
             "try:\n",
             "    if rf_metrics is not None:\n",
             "        print(json.dumps(rf_metrics, indent=2))\n",

@@ -36,11 +36,11 @@ class KaggleUploader:
             os.environ['KAGGLE_USERNAME'] = credentials.get('username', '')
             os.environ['KAGGLE_KEY'] = credentials.get('key', '')
         except FileNotFoundError:
-            print(f"❌ Error: Kaggle credentials file not found at {self.credentials_path}")
+            print(f"Error: Kaggle credentials file not found at {self.credentials_path}")
             print("Please ensure your kaggle.json file is in the correct location or set environment variables.")
             sys.exit(1)
         except json.JSONDecodeError:
-            print(f"❌ Error: Invalid JSON in credentials file {self.credentials_path}")
+            print(f"Error: Invalid JSON in credentials file {self.credentials_path}")
             sys.exit(1)
 
     def ensure_kaggle_cli_path(self):
@@ -53,7 +53,7 @@ class KaggleUploader:
         if os.path.exists(kaggle_exe):
             os.environ["PATH"] = user_scripts + os.pathsep + os.environ.get("PATH", "")
             return True
-        print("❌ Kaggle CLI not found. Please ensure 'kaggle' is installed and on PATH.")
+        print("Kaggle CLI not found. Please ensure 'kaggle' is installed and on PATH.")
         print("   Try: pip install --user kaggle")
         return False
 
@@ -61,16 +61,16 @@ class KaggleUploader:
         if not self.ensure_kaggle_cli_path():
             return None
         try:
-            print(f"➡️ Running: {cmd}")
+            print(f"Running: {cmd}")
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
-                print("❌ Kaggle command failed:")
+                print("Kaggle command failed:")
                 print(result.stderr)
                 return None
             print(result.stdout)
             return result.stdout
         except Exception as e:
-            print("❌ Error executing Kaggle command:", e)
+            print("Error executing Kaggle command:", e)
             return None
 
     def run_kaggle_command(self, command):
@@ -78,16 +78,16 @@ class KaggleUploader:
         try:
             result = subprocess.run(command, shell=True, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"✅ Command successful: {command}")
+                print(f"Command successful: {command}")
                 if result.stdout:
                     print(f"Output: {result.stdout}")
                 return True
             else:
-                print(f"❌ Command failed: {command}")
+                print(f"Command failed: {command}")
                 print(f"Error: {result.stderr}")
                 return False
         except Exception as e:
-            print(f"❌ Exception running command: {command}")
+            print(f"Exception running command: {command}")
             print(f"Error: {str(e)}")
             return False
     
@@ -124,7 +124,7 @@ class KaggleUploader:
         dataset_path = files_path.parent if files_path.is_file() else files_path
         command = f"kaggle datasets create -p {dataset_path}"
         
-        print(f"📁 Creating dataset: {dataset_name}")
+        print(f"Creating dataset: {dataset_name}")
         return self.run_kaggle_command(command)
     
     def upload_notebook(self, notebook_path, notebook_name, description, tags=None):
@@ -134,17 +134,17 @@ class KaggleUploader:
         
         notebook_path = Path(notebook_path)
         if not notebook_path.exists():
-            print(f"❌ Notebook not found: {notebook_path}")
+            print(f"Notebook not found: {notebook_path}")
             return False
         
         # Convert notebook to script if needed (optional)
-        print(f"📓 Uploading notebook: {notebook_name}")
+        print(f"Uploading notebook: {notebook_name}")
         
         # Note: Kaggle API doesn't directly support notebook upload
         # This would need to be done manually through the web interface
         # or converted to a script first
         
-        print("⚠️  Note: Notebook upload via API is limited.")
+        print(" Note: Notebook upload via API is limited.")
         print("Please upload manually through Kaggle web interface:")
         print("1. Go to kaggle.com/code")
         print("2. Click '+ Create' → 'New Notebook'")
@@ -155,12 +155,12 @@ class KaggleUploader:
     
     def list_datasets(self):
         """List all datasets for the user"""
-        print("📊 Listing your datasets:")
+        print("Listing your datasets:")
         return self.run_kaggle_command("kaggle datasets list --mine")
     
     def list_notebooks(self):
         """List all notebooks for the user"""
-        print("📓 Listing your notebooks:")
+        print("Listing your notebooks:")
         return self.run_kaggle_command("kaggle kernels list --mine")
 
     def ensure_kaggle_cli_path(self):
@@ -173,7 +173,7 @@ class KaggleUploader:
         if os.path.exists(kaggle_exe):
             os.environ["PATH"] = user_scripts + os.pathsep + os.environ.get("PATH", "")
             return True
-        print("❌ Kaggle CLI not found. Please ensure 'kaggle' is installed and on PATH.")
+        print("Kaggle CLI not found. Please ensure 'kaggle' is installed and on PATH.")
         print("   Try: pip install --user kaggle")
         return False
 
@@ -182,33 +182,33 @@ class KaggleUploader:
         dataset_dir = Path(dataset_dir)
         metadata_path = dataset_dir / "dataset-metadata.json"
         if not metadata_path.exists():
-            print(f"❌ dataset-metadata.json not found in {dataset_dir}. Aborting.")
+            print(f"dataset-metadata.json not found in {dataset_dir}. Aborting.")
             return False
-        print(f"📁 Ensuring dataset up to date: {dataset_dir}")
+        print(f"Ensuring dataset up to date: {dataset_dir}")
         # Try create first
         create_cmd = f"kaggle datasets create -p {dataset_dir}"
         result_create = subprocess.run(create_cmd, shell=True, capture_output=True, text=True)
         if result_create.returncode == 0:
-            print(f"✅ Dataset created: {dataset_dir}")
+            print(f"Dataset created: {dataset_dir}")
             if result_create.stdout:
                 print(f"Output: {result_create.stdout}")
             return True
         # If create failed because already exists, version it
         stderr = (result_create.stderr or "").lower()
         if "already exists" in stderr or "409" in stderr or "conflict" in stderr:
-            print("ℹ️ Dataset already exists, creating a new version...")
+            print("ℹ Dataset already exists, creating a new version...")
             version_cmd = f"kaggle datasets version -p {dataset_dir} -m \"{version_message}\""
             result_version = subprocess.run(version_cmd, shell=True, capture_output=True, text=True)
             if result_version.returncode == 0:
-                print("✅ Dataset version created successfully")
+                print("Dataset version created successfully")
                 if result_version.stdout:
                     print(f"Output: {result_version.stdout}")
                 return True
-            print("❌ Dataset version failed")
+            print("Dataset version failed")
             print(f"Error: {result_version.stderr}")
             return False
         # Unknown failure
-        print("❌ Dataset create failed")
+        print("Dataset create failed")
         print(f"Error: {result_create.stderr}")
         return False
 
@@ -217,23 +217,23 @@ class KaggleUploader:
         kernel_dir = Path(kernel_dir)
         metadata_path = kernel_dir / "kernel-metadata.json"
         if not metadata_path.exists():
-            print(f"❌ kernel-metadata.json not found in {kernel_dir}")
+            print(f"kernel-metadata.json not found in {kernel_dir}")
             return False
-        print(f"🚀 Pushing Kaggle kernel from: {kernel_dir}")
+        print(f"Pushing Kaggle kernel from: {kernel_dir}")
         push_cmd = f"kaggle kernels push -p {kernel_dir}"
         result_push = subprocess.run(push_cmd, shell=True, capture_output=True, text=True)
         if result_push.returncode == 0:
-            print("✅ Kernel pushed successfully")
+            print("Kernel pushed successfully")
             if result_push.stdout:
                 print(f"Output: {result_push.stdout}")
             return True
-        print("❌ Kernel push failed")
+        print("Kernel push failed")
         print(f"Error: {result_push.stderr}")
         return False
 
 def main():
     """Main function to demonstrate Kaggle upload automation"""
-    print("🚀 Kaggle Upload Automation")
+    print("Kaggle Upload Automation")
     print("=" * 50)
     
     # Initialize uploader
@@ -243,33 +243,33 @@ def main():
     uploader.ensure_kaggle_cli_path()
     
     # Create or update dataset from portfolio directory
-    print("\n📁 Creating/Updating Cyclistic Dataset...")
+    print("\nCreating/Updating Cyclistic Dataset...")
     uploader.create_or_update_dataset(
         dataset_dir="portfolio/kaggle_dataset",
         version_message="Automated update from local portfolio"
     )
     
     # Push Python kernel (automated via CLI)
-    print("\n📓 Pushing Python Kernel...")
+    print("\nPushing Python Kernel...")
     uploader.push_kernel(
         kernel_dir="portfolio/kaggle_kernel_python"
     )
 
     # Push R kernel (automated via CLI)
-    print("\n📓 Pushing R Kernel...")
+    print("\nPushing R Kernel...")
     uploader.push_kernel(
         kernel_dir="portfolio/kaggle_kernel_r"
     )
 
     # List current datasets and notebooks
-    print("\n📊 Current Datasets:")
+    print("\nCurrent Datasets:")
     uploader.list_datasets()
 
-    print("\n📓 Current Notebooks:")
+    print("\nCurrent Notebooks:")
     uploader.list_notebooks()
     
-    print("\n✅ Upload automation complete!")
-    print("\n📋 Next Steps:")
+    print("\nUpload automation complete!")
+    print("\nNext Steps:")
     print("1. Check your datasets at: https://www.kaggle.com/datasets")
     print("2. Review your kernels at: https://www.kaggle.com/code")
     print("3. Link your notebook to your dataset if needed")

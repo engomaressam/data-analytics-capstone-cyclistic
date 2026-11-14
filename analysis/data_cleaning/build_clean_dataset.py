@@ -36,7 +36,7 @@ def list_monthly_downloaded() -> List[Tuple[str, str]]:
     items = []
     base = DOWNLOADED_DIR
     if not os.path.isdir(base):
-        print(f"❌ Downloaded directory not found: {base}")
+        print(f"Downloaded directory not found: {base}")
         return items
 
     for name in os.listdir(base):
@@ -64,7 +64,7 @@ def copy_to_raw(monthly_items: List[Tuple[str, str]]) -> List[str]:
             if candidates:
                 expected_csv = os.path.join(src_folder, candidates[0])
             else:
-                print(f"⚠️ No CSV found in {src_folder}; skipping")
+                print(f"No CSV found in {src_folder}; skipping")
                 continue
         # Create raw subfolder and copy
         raw_subdir = os.path.join(RAW_DIR, f"{yyyymm}-divvy-tripdata")
@@ -74,7 +74,7 @@ def copy_to_raw(monthly_items: List[Tuple[str, str]]) -> List[str]:
             shutil.copy2(expected_csv, dst_csv)
             raw_files.append(dst_csv)
         except Exception as e:
-            print(f"❌ Failed to copy {expected_csv} -> {dst_csv}: {e}")
+            print(f"Failed to copy {expected_csv} -> {dst_csv}: {e}")
     return raw_files
 
 
@@ -184,19 +184,19 @@ def build_clean_dataset():
 
     all_months = list_monthly_downloaded()
     if not all_months:
-        print("❌ No monthly downloaded folders found.")
+        print("No monthly downloaded folders found.")
         return
 
     selected = select_recent_months(all_months, MONTHS_TO_INCLUDE)
-    print(f"📦 Found {len(all_months)} monthly folders; selecting last {len(selected)} months:")
+    print(f"Found {len(all_months)} monthly folders; selecting last {len(selected)} months:")
     print("   " + ", ".join([m for m, _ in selected]))
 
     # Copy into raw for reproducibility
     raw_files = copy_to_raw(selected)
-    print(f"📁 Copied {len(raw_files)} CSV files into {RAW_DIR}")
+    print(f"Copied {len(raw_files)} CSV files into {RAW_DIR}")
 
     if not raw_files:
-        print("❌ No raw files available after copy; aborting")
+        print("No raw files available after copy; aborting")
         return
 
     # Read, standardize, concat
@@ -207,23 +207,23 @@ def build_clean_dataset():
             df = standardize_columns(df)
             dfs.append(df)
         except Exception as e:
-            print(f"⚠️ Skipping file due to read error: {path} -> {e}")
+            print(f"Skipping file due to read error: {path} -> {e}")
 
     if not dfs:
-        print("❌ No dataframes loaded; aborting")
+        print("No dataframes loaded; aborting")
         return
 
     combined = pd.concat(dfs, axis=0, ignore_index=True)
-    print(f"🧮 Combined records before dedup: {len(combined):,}")
+    print(f"Combined records before dedup: {len(combined):,}")
 
     # Deduplicate by ride_id
     if 'ride_id' in combined.columns:
         combined = combined.drop_duplicates(subset=['ride_id'])
-    print(f"🧹 Records after dedup: {len(combined):,}")
+    print(f"Records after dedup: {len(combined):,}")
 
     # Derive features and filter
     cleaned = derive_features(combined)
-    print(f"✅ Records after cleaning/filters: {len(cleaned):,}")
+    print(f"Records after cleaning/filters: {len(cleaned):,}")
 
     # Output
     os.makedirs(PROCESSED_DIR, exist_ok=True)
@@ -238,12 +238,12 @@ def build_clean_dataset():
         'members_pct': round(100 * (cleaned['member_casual'] == 'member').mean(), 2) if len(cleaned) else None,
         'casual_pct': round(100 * (cleaned['member_casual'] == 'casual').mean(), 2) if len(cleaned) else None,
     }
-    print("\n📊 Build Summary:")
+    print("\nBuild Summary:")
     for k, v in summary.items():
         print(f" - {k}: {v}")
 
-    print(f"\n💾 Saved cleaned dataset -> {OUTPUT_FILE}")
-    print("🚀 Ready for EDA: analysis/exploratory/cyclistic_eda.py expects this file path")
+    print(f"\nSaved cleaned dataset -> {OUTPUT_FILE}")
+    print("Ready for EDA: analysis/exploratory/cyclistic_eda.py expects this file path")
 
 
 if __name__ == "__main__":

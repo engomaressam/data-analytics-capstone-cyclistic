@@ -15,7 +15,7 @@ output: html_document
 
 ---
 
-## 📋 Project Overview
+## Project Overview
 
 ### Business Problem
 Cyclistic is a bike-share program in Chicago with 5,800+ bicycles and 600+ docking stations. The company's marketing team, led by Director Lily Moreno, needs to understand how casual riders and annual members use bikes differently to design effective marketing strategies for converting casual riders to annual members.
@@ -30,7 +30,7 @@ Design marketing strategies aimed at converting casual riders into annual member
 
 ---
 
-## 🎯 Research Questions
+## Research Questions
 
 1. **Primary Question**: How do annual members and casual riders use Cyclistic bikes differently?
 
@@ -40,7 +40,7 @@ Design marketing strategies aimed at converting casual riders into annual member
 
 ---
 
-## 📊 Data Sources
+## Data Sources
 
 ### Dataset Information
 - **Source**: Divvy's historical trip data (publicly available)
@@ -62,39 +62,39 @@ Design marketing strategies aimed at converting casual riders into annual member
 
 ---
 
-## 🔧 Data Analysis Process
+## Data Analysis Process
 
-### Phase 1: Ask ✅
+### Phase 1: Ask
 - [x] Define business problem clearly
 - [x] Identify key stakeholders
 - [x] Formulate SMART questions
 - [x] Determine success metrics
 
-### Phase 2: Prepare ✅
+### Phase 2: Prepare
 - [x] Identify data sources
 - [x] Assess data quality and completeness
 - [x] Create data dictionary
 - [x] Plan data cleaning strategy
 
-### Phase 3: Process 🔄
+### Phase 3: Process
 - [ ] Import data into analysis tools
 - [ ] Check for errors and inconsistencies
 - [ ] Transform data for analysis
 - [ ] Document cleaning process
 
-### Phase 4: Analyze 🔄
+### Phase 4: Analyze
 - [ ] Perform exploratory data analysis
 - [ ] Identify patterns and trends
 - [ ] Calculate key metrics
 - [ ] Compare member vs casual behavior
 
-### Phase 5: Share 📊
+### Phase 5: Share
 - [ ] Create compelling visualizations
 - [ ] Design interactive dashboards
 - [ ] Prepare presentation materials
 - [ ] Document key findings
 
-### Phase 6: Act 💡
+### Phase 6: Act
 - [ ] Provide actionable recommendations
 - [ ] Create implementation roadmap
 - [ ] Define success metrics
@@ -102,7 +102,7 @@ Design marketing strategies aimed at converting casual riders into annual member
 
 ---
 
-## 📈 Data Loading and Initial Exploration
+## Data Loading and Initial Exploration
 
 ```{r setup, include=FALSE}
 # Load required libraries
@@ -169,7 +169,7 @@ str(sample_data)
 
 ---
 
-## 📊 Exploratory Data Analysis
+## Exploratory Data Analysis
 
 ### Member vs Casual Distribution
 
@@ -290,7 +290,7 @@ ggplot(bike_preferences, aes(x = rideable_type, y = count, fill = member_casual)
 
 ---
 
-## 🔍 Key Insights and Findings
+## Key Insights and Findings
 
 ### 1. Usage Pattern Differences
 - **Casual riders** tend to use bikes for longer, more leisurely rides
@@ -309,7 +309,7 @@ ggplot(bike_preferences, aes(x = rideable_type, y = count, fill = member_casual)
 
 ---
 
-## 💡 Business Recommendations
+## Business Recommendations
 
 ### Marketing Strategy Recommendations
 
@@ -347,7 +347,7 @@ ggplot(bike_preferences, aes(x = rideable_type, y = count, fill = member_casual)
 
 ---
 
-## 📈 Success Metrics
+## Success Metrics
 
 ### Primary Metrics
 1. **Conversion Rate**: Percentage of casual riders converting to members
@@ -361,7 +361,7 @@ ggplot(bike_preferences, aes(x = rideable_type, y = count, fill = member_casual)
 
 ---
 
-## 🛠️ Technical Implementation
+## Technical Implementation
 
 ### Data Cleaning Process
 ```sql
@@ -394,7 +394,7 @@ WHERE
 
 ---
 
-## 📚 About the Author
+## About the Author
 
 **Omar Essam El-Din Mohamed**  
 Data Engineering & Machine Learning Lead
@@ -427,7 +427,7 @@ Data Engineering & Machine Learning Lead
 
 ---
 
-## 📄 Project Documentation
+## Project Documentation
 
 This project demonstrates comprehensive data analytics skills including:
 

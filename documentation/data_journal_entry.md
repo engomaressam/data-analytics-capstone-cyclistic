@@ -70,10 +70,10 @@ The data has been pruned and anonymized by Cyclistic for privacy protection. The
 ## Project Approach
 
 ### Phase 1: Ask
-- ✅ Define business problem: Convert casual riders to annual members
-- ✅ Identify stakeholders: Marketing team and executives
-- ✅ Formulate SMART questions about usage patterns
-- ✅ Determine success metrics: Conversion rate improvement
+- Define business problem: Convert casual riders to annual members
+- Identify stakeholders: Marketing team and executives
+- Formulate SMART questions about usage patterns
+- Determine success metrics: Conversion rate improvement
 
 ### Phase 2: Prepare
 - [ ] Download last 12 months of Divvy trip data

@@ -61,39 +61,39 @@ def analyze_csv_file(file_path):
     
     # Check if file exists
     if not os.path.exists(file_path):
-        print("❌ File not found!")
+        print("File not found!")
         return None
     
     # Get file info
     file_size = os.path.getsize(file_path) / (1024 * 1024)  # MB
     mod_time = datetime.fromtimestamp(os.path.getmtime(file_path))
     
-    print(f"📁 File size: {file_size:.2f} MB")
-    print(f"📅 Last modified: {mod_time}")
+    print(f"File size: {file_size:.2f} MB")
+    print(f"Last modified: {mod_time}")
     
     try:
         # Read first few rows to check structure
         sample_data = pd.read_csv(file_path, nrows=5)
         
-        print(f"📊 Columns found: {len(sample_data.columns)}")
-        print("📋 Column names:")
+        print(f"Columns found: {len(sample_data.columns)}")
+        print("Column names:")
         for i, col in enumerate(sample_data.columns, 1):
             print(f"  {i:2d}: {col}")
         
         # Check data types
-        print("\n🔍 Data types:")
+        print("\nData types:")
         for col in sample_data.columns:
             dtype = sample_data[col].dtype
             print(f"  {col:<25}: {dtype}")
         
         # Show sample data
-        print("\n📄 Sample data (first 3 rows):")
+        print("\nSample data (first 3 rows):")
         print(sample_data.head(3))
         
         return sample_data
         
     except Exception as e:
-        print(f"❌ Error reading file: {e}")
+        print(f"Error reading file: {e}")
         return None
 
 # =====================================================
@@ -104,7 +104,7 @@ def analyze_csv_file(file_path):
 recent_files = [f for f in csv_files if '2024' in f]
 
 if recent_files:
-    print("\n🎯 FOCUSING ON RECENT FILES (2024):")
+    print("\nFOCUSING ON RECENT FILES (2024):")
     
     # Analyze first few recent files
     files_to_analyze = recent_files[:3]
@@ -112,7 +112,7 @@ if recent_files:
     for file in files_to_analyze:
         analyze_csv_file(file)
 else:
-    print("\n⚠️ No 2024 files found. Analyzing available files...")
+    print("\nNo 2024 files found. Analyzing available files...")
     files_to_analyze = csv_files[:3]
     
     for file in files_to_analyze:
@@ -134,25 +134,25 @@ print("="*80)
 
 if os.path.exists(target_file):
     # Read the complete file
-    print("📥 Loading complete dataset...")
+    print("Loading complete dataset...")
     
     try:
         # Read the file
         cyclistic_data = pd.read_csv(target_file)
         
-        print(f"✅ Successfully loaded {len(cyclistic_data):,} records")
-        print(f"📊 Total columns: {len(cyclistic_data.columns)}")
+        print(f"Successfully loaded {len(cyclistic_data):,} records")
+        print(f"Total columns: {len(cyclistic_data.columns)}")
         
         # =====================================================
         # DATA OVERVIEW
         # =====================================================
         
-        print("\n📋 DATA OVERVIEW:")
+        print("\nDATA OVERVIEW:")
         print(f"Records: {len(cyclistic_data):,}")
         print(f"Columns: {len(cyclistic_data.columns)}")
         
         # Column information
-        print("\n📝 Column Details:")
+        print("\nColumn Details:")
         for i, (col_name, col_data) in enumerate(cyclistic_data.items(), 1):
             non_null = col_data.notna().sum()
             null_pct = (col_data.isna().sum() / len(cyclistic_data)) * 100
@@ -162,7 +162,7 @@ if os.path.exists(target_file):
         # DATA QUALITY ASSESSMENT
         # =====================================================
         
-        print("\n🔍 DATA QUALITY ASSESSMENT:")
+        print("\nDATA QUALITY ASSESSMENT:")
         
         # Missing values summary
         missing_summary = pd.DataFrame({
@@ -184,7 +184,7 @@ if os.path.exists(target_file):
         # =====================================================
         
         if 'member_casual' in cyclistic_data.columns:
-            print("\n👥 MEMBER TYPE DISTRIBUTION:")
+            print("\nMEMBER TYPE DISTRIBUTION:")
             member_dist = cyclistic_data['member_casual'].value_counts(dropna=False)
             member_pct = cyclistic_data['member_casual'].value_counts(normalize=True, dropna=False) * 100
             
@@ -197,7 +197,7 @@ if os.path.exists(target_file):
         # =====================================================
         
         if 'rideable_type' in cyclistic_data.columns:
-            print("\n🚴 BIKE TYPE DISTRIBUTION:")
+            print("\nBIKE TYPE DISTRIBUTION:")
             bike_dist = cyclistic_data['rideable_type'].value_counts(dropna=False)
             bike_pct = cyclistic_data['rideable_type'].value_counts(normalize=True, dropna=False) * 100
             
@@ -210,7 +210,7 @@ if os.path.exists(target_file):
         # =====================================================
         
         if 'started_at' in cyclistic_data.columns:
-            print("\n📅 DATE/TIME ANALYSIS:")
+            print("\nDATE/TIME ANALYSIS:")
             
             # Convert to datetime
             cyclistic_data['started_at'] = pd.to_datetime(cyclistic_data['started_at'])
@@ -245,7 +245,7 @@ if os.path.exists(target_file):
         # =====================================================
         
         if 'start_station_name' in cyclistic_data.columns:
-            print("\n🚉 STATION ANALYSIS:")
+            print("\nSTATION ANALYSIS:")
             
             # Top start stations
             top_start = (cyclistic_data['start_station_name']
@@ -260,7 +260,7 @@ if os.path.exists(target_file):
         # VISUALIZATION CREATION
         # =====================================================
         
-        print("\n📊 CREATING VISUALIZATIONS:")
+        print("\nCREATING VISUALIZATIONS:")
         
         # Create output directory
         os.makedirs("analysis/exploratory", exist_ok=True)
@@ -434,8 +434,8 @@ if os.path.exists(target_file):
         # Save processed data
         cyclistic_data.to_csv('analysis/exploratory/processed_data.csv', index=False)
         
-        print("\n✅ Analysis complete! Results saved to analysis/exploratory/")
-        print("📁 Files created:")
+        print("\nAnalysis complete! Results saved to analysis/exploratory/")
+        print("Files created:")
         print("   • analysis/exploratory/data_quality_summary.csv")
         print("   • analysis/exploratory/member_distribution.csv")
         print("   • analysis/exploratory/sample_data.csv")
@@ -446,10 +446,10 @@ if os.path.exists(target_file):
         print("   • analysis/exploratory/bike_type_analysis.png")
         
     except Exception as e:
-        print(f"❌ Error loading file: {e}")
+        print(f"Error loading file: {e}")
         
 else:
-    print(f"❌ Target file not found: {target_file}")
+    print(f"Target file not found: {target_file}")
 
 # =====================================================
 # SUMMARY AND NEXT STEPS
@@ -459,16 +459,16 @@ print("\n" + "="*80)
 print("EXPLORATION SUMMARY AND NEXT STEPS")
 print("="*80)
 
-print(f"\n📋 What we accomplished:")
-print(f"   ✅ Discovered {len(csv_files)} CSV files in the dataset")
-print("   ✅ Analyzed file structure and data quality")
-print("   ✅ Examined member types and bike types")
-print("   ✅ Assessed date/time data and ride durations")
-print("   ✅ Identified top stations and usage patterns")
-print("   ✅ Created comprehensive visualizations")
-print("   ✅ Saved results for further analysis")
+print(f"\nWhat we accomplished:")
+print(f"   Discovered {len(csv_files)} CSV files in the dataset")
+print("   Analyzed file structure and data quality")
+print("   Examined member types and bike types")
+print("   Assessed date/time data and ride durations")
+print("   Identified top stations and usage patterns")
+print("   Created comprehensive visualizations")
+print("   Saved results for further analysis")
 
-print("\n🎯 Recommended next steps:")
+print("\nRecommended next steps:")
 print("   1. Review the data quality summary and visualizations")
 print("   2. Plan data cleaning strategy based on findings")
 print("   3. Implement data cleaning pipeline")
@@ -476,4 +476,4 @@ print("   4. Run comprehensive statistical analysis")
 print("   5. Create interactive dashboards")
 print("   6. Develop business recommendations")
 
-print("\n🚀 Ready for the next phase of your capstone project!")
+print("\nReady for the next phase of your capstone project!")

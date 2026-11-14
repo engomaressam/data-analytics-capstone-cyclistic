@@ -59,40 +59,40 @@ analyze_csv_file <- function(file_path) {
   
   # Check if file exists
   if (!file.exists(file_path)) {
-    cat("❌ File not found!\n")
+    cat("File not found!\n")
     return(NULL)
   }
   
   # Get file info
   file_info <- file.info(file_path)
-  cat("📁 File size:", round(file_info$size / (1024*1024), 2), "MB\n")
-  cat("📅 Last modified:", file_info$mtime, "\n")
+  cat("File size:", round(file_info$size / (1024*1024), 2), "MB\n")
+  cat("Last modified:", file_info$mtime, "\n")
   
   # Try to read the file
   tryCatch({
     # Read first few rows to check structure
     sample_data <- read_csv(file_path, n_max = 5, show_col_types = FALSE)
     
-    cat("📊 Columns found:", ncol(sample_data), "\n")
-    cat("📋 Column names:\n")
+    cat("Columns found:", ncol(sample_data), "\n")
+    cat("Column names:\n")
     for (i in seq_along(names(sample_data))) {
       cat("  ", i, ":", names(sample_data)[i], "\n")
     }
     
     # Check data types
-    cat("\n🔍 Data types:\n")
+    cat("\nData types:\n")
     for (i in seq_along(sample_data)) {
       cat("  ", names(sample_data)[i], ":", class(sample_data[[i]])[1], "\n")
     }
     
     # Show sample data
-    cat("\n📄 Sample data (first 3 rows):\n")
+    cat("\nSample data (first 3 rows):\n")
     print(head(sample_data, 3))
     
     return(sample_data)
     
   }, error = function(e) {
-    cat("❌ Error reading file:", e$message, "\n")
+    cat("Error reading file:", e$message, "\n")
     return(NULL)
   })
 }
@@ -105,7 +105,7 @@ analyze_csv_file <- function(file_path) {
 recent_files <- csv_files[grepl("2024", csv_files)]
 
 if (length(recent_files) > 0) {
-  cat("\n🎯 FOCUSING ON RECENT FILES (2024):\n")
+  cat("\nFOCUSING ON RECENT FILES (2024):\n")
   
   # Analyze first few recent files
   files_to_analyze <- head(recent_files, 3)
@@ -114,7 +114,7 @@ if (length(recent_files) > 0) {
     analyze_csv_file(file)
   }
 } else {
-  cat("\n⚠️ No 2024 files found. Analyzing available files...\n")
+  cat("\nNo 2024 files found. Analyzing available files...\n")
   files_to_analyze <- head(csv_files, 3)
   
   for (file in files_to_analyze) {
@@ -139,25 +139,25 @@ cat(rep("=", 80) + "\n")
 
 if (file.exists(target_file)) {
   # Read the complete file
-  cat("📥 Loading complete dataset...\n")
+  cat("Loading complete dataset...\n")
   
   tryCatch({
     # Read the file
     cyclistic_data <- read_csv(target_file, show_col_types = FALSE)
     
-    cat("✅ Successfully loaded", nrow(cyclistic_data), "records\n")
-    cat("📊 Total columns:", ncol(cyclistic_data), "\n")
+    cat("Successfully loaded", nrow(cyclistic_data), "records\n")
+    cat("Total columns:", ncol(cyclistic_data), "\n")
     
     # =====================================================
     # DATA OVERVIEW
     # =====================================================
     
-    cat("\n📋 DATA OVERVIEW:\n")
+    cat("\nDATA OVERVIEW:\n")
     cat("Records:", nrow(cyclistic_data), "\n")
     cat("Columns:", ncol(cyclistic_data), "\n")
     
     # Column information
-    cat("\n📝 Column Details:\n")
+    cat("\nColumn Details:\n")
     for (i in seq_along(cyclistic_data)) {
       col_name <- names(cyclistic_data)[i]
       col_type <- class(cyclistic_data[[i]])[1]
@@ -170,7 +170,7 @@ if (file.exists(target_file)) {
     # DATA QUALITY ASSESSMENT
     # =====================================================
     
-    cat("\n🔍 DATA QUALITY ASSESSMENT:\n")
+    cat("\nDATA QUALITY ASSESSMENT:\n")
     
     # Missing values
     missing_summary <- cyclistic_data %>%
@@ -197,7 +197,7 @@ if (file.exists(target_file)) {
     # =====================================================
     
     if ("member_casual" %in% names(cyclistic_data)) {
-      cat("\n👥 MEMBER TYPE DISTRIBUTION:\n")
+      cat("\nMEMBER TYPE DISTRIBUTION:\n")
       member_dist <- table(cyclistic_data$member_casual, useNA = "ifany")
       member_pct <- round(prop.table(member_dist) * 100, 2)
       
@@ -212,7 +212,7 @@ if (file.exists(target_file)) {
     # =====================================================
     
     if ("rideable_type" %in% names(cyclistic_data)) {
-      cat("\n🚴 BIKE TYPE DISTRIBUTION:\n")
+      cat("\nBIKE TYPE DISTRIBUTION:\n")
       bike_dist <- table(cyclistic_data$rideable_type, useNA = "ifany")
       bike_pct <- round(prop.table(bike_dist) * 100, 2)
       
@@ -227,7 +227,7 @@ if (file.exists(target_file)) {
     # =====================================================
     
     if ("started_at" %in% names(cyclistic_data)) {
-      cat("\n📅 DATE/TIME ANALYSIS:\n")
+      cat("\nDATE/TIME ANALYSIS:\n")
       
       # Convert to datetime
       cyclistic_data$started_at <- as.POSIXct(cyclistic_data$started_at)
@@ -257,7 +257,7 @@ if (file.exists(target_file)) {
     # =====================================================
     
     if ("start_station_name" %in% names(cyclistic_data)) {
-      cat("\n🚉 STATION ANALYSIS:\n")
+      cat("\nSTATION ANALYSIS:\n")
       
       # Top start stations
       top_start <- cyclistic_data %>%
@@ -299,14 +299,14 @@ if (file.exists(target_file)) {
     sample_data <- cyclistic_data[sample(nrow(cyclistic_data), sample_size), ]
     write.csv(sample_data, "analysis/exploratory/sample_data.csv", row.names = FALSE)
     
-    cat("\n✅ Analysis complete! Results saved to analysis/exploratory/\n")
+    cat("\nAnalysis complete! Results saved to analysis/exploratory/\n")
     
   }, error = function(e) {
-    cat("❌ Error loading file:", e$message, "\n")
+    cat("Error loading file:", e$message, "\n")
   })
   
 } else {
-  cat("❌ Target file not found:", target_file, "\n")
+  cat("Target file not found:", target_file, "\n")
 }
 
 # =====================================================
@@ -317,24 +317,24 @@ cat("\n" + rep("=", 80) + "\n")
 cat("EXPLORATION SUMMARY AND NEXT STEPS\n")
 cat(rep("=", 80) + "\n")
 
-cat("\n📋 What we accomplished:\n")
-cat("   ✅ Discovered", length(csv_files), "CSV files in the dataset\n")
-cat("   ✅ Analyzed file structure and data quality\n")
-cat("   ✅ Examined member types and bike types\n")
-cat("   ✅ Assessed date/time data and ride durations\n")
-cat("   ✅ Identified top stations and usage patterns\n")
-cat("   ✅ Saved results for further analysis\n")
+cat("\nWhat we accomplished:\n")
+cat("   Discovered", length(csv_files), "CSV files in the dataset\n")
+cat("   Analyzed file structure and data quality\n")
+cat("   Examined member types and bike types\n")
+cat("   Assessed date/time data and ride durations\n")
+cat("   Identified top stations and usage patterns\n")
+cat("   Saved results for further analysis\n")
 
-cat("\n🎯 Recommended next steps:\n")
+cat("\nRecommended next steps:\n")
 cat("   1. Review the data quality summary\n")
 cat("   2. Plan data cleaning strategy\n")
 cat("   3. Implement SQL cleaning script\n")
 cat("   4. Run comprehensive exploratory analysis\n")
 cat("   5. Create visualizations and dashboards\n")
 
-cat("\n📁 Files created:\n")
+cat("\nFiles created:\n")
 cat("   • analysis/exploratory/data_quality_summary.csv\n")
 cat("   • analysis/exploratory/member_distribution.csv\n")
 cat("   • analysis/exploratory/sample_data.csv\n")
 
-cat("\n🚀 Ready for the next phase of your capstone project!\n")
+cat("\nReady for the next phase of your capstone project!\n")
